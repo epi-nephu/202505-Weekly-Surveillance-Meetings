@@ -91,7 +91,7 @@ outbreak_end   <- lubridate::ymd("2026-03-18")
 ```{r}
 # Connect to PHAR and run queries
 # Set useProxy = 0 when WFH and useProxy = 1 when in Austin office
-con <- DBI::dbConnect(odbc::odbc(), "PHAR", useProxy = 0)
+con <- DBI::dbConnect(odbc::odbc(), "PHAR", useProxy = 1)
 
 # New notifications during past epi week
 all_enteric <- DBI::dbGetQuery(con,
@@ -135,7 +135,8 @@ outbreaks_enteric <- DBI::dbGetQuery(con,
 outbreaks_enteric <- outbreaks_enteric %>% 
   janitor::clean_names() %>% 
   #
-  dplyr::filter(investigation_completed_date >= outbreak_start & investigation_completed_date <= outbreak_end) %>% 
+  dplyr::filter(investigation_completed_date >= outbreak_start & investigation_completed_date <= outbreak_end) %>%
+  dplyr::filter(!is.na(exposure_site)) %>% 
   #
   dplyr::select(event_id,
                 outbreak_name,
@@ -165,11 +166,9 @@ conditions_reference <- readxl::read_xlsx(paste0(here::here(), "/Data/Conditions
 
 ## Closed Outbreaks Since Last Meeting
 
-**NEPHU enterics outbreaks closed between `r format(outbreak_start, format = "%d/%m/%Y")` and `r format(outbreak_end, format = "%d/%m/%Y")`**
-
 ```{r}
 #
-outbreaks_enteric %>% 
+outbreaks_enteric <- outbreaks_enteric %>% 
   dplyr::mutate(
     facility_name = stringr::str_sub(exposure_site, 32),
     #
@@ -185,8 +184,18 @@ outbreaks_enteric %>%
                 organism_cause,
                 investigation_completed_date) %>% 
   #
-  dplyr::arrange(investigation_completed_date, setting_where_exposure_occurred, organism_cause) %>% 
-  #
+  dplyr::arrange(investigation_completed_date, setting_where_exposure_occurred, organism_cause)
+```
+
+`r if(nrow(outbreaks_enteric) == 1) paste0("There has been ", nrow(outbreaks_enteric), " closed outbreak since the last NEPHU weekly surveillance meeting on ", format(outbreak_start, format = "%d/%m/%Y"), ".")`
+
+`r if(nrow(outbreaks_enteric) != 1) paste0("There have been ", nrow(outbreaks_enteric), " closed outbreaks since the last NEPHU weekly surveillance meeting on ", format(outbreak_start, format = "%d/%m/%Y"), ".")`
+
+**NEPHU enterics outbreaks closed between `r format(outbreak_start, format = "%d/%m/%Y")` and `r format(outbreak_end, format = "%d/%m/%Y")`**
+
+```{r}
+#
+outbreaks_enteric %>% 
   knitr::kable(table.attr = "style = \"color: black;\"",
                align      = "lllll",
                col.names  = c("PHESS ID",
@@ -207,8 +216,6 @@ outbreaks_enteric %>%
 ***
 
 ## New and Completed Cases in Past Epiweek
-
-**NEPHU newly signed out and completed enterics cases between `r format(epiweek_start, format = "%d/%m/%Y")` and `r format(epiweek_end, format = "%d/%m/%Y")`**
 
 ```{r}
 # Select cases for review
@@ -244,7 +251,14 @@ review_enteric <- new_enteric %>%
                 suburb,
                 lga,
                 notes)
+```
 
+There are `r review_enteric %>% dplyr::filter(type == "New") %>% nrow()` newly signed out enterics cases from the past epiweek and there have been `r review_enteric %>% dplyr::filter(type == "Completed") %>% nrow()` enterics cases from previous epiweeks completed since the last NEPHU weekly surveillance meeting.
+
+**NEPHU newly signed out cases between `r format(epiweek_start, format = "%d/%m/%Y")` and `r format(epiweek_end, format = "%d/%m/%Y")` and completed enterics cases between `r format(outbreak_start, format = "%d/%m/%Y")` and `r format(outbreak_end, format = "%d/%m/%Y")`**
+
+```{r}
+#
 review_enteric %>% 
   knitr::kable(table.attr = "style = \"color: black;\"",
                align      = "llllllll",
