@@ -1,0 +1,271 @@
+---
+title: 'NEPHU Surveillance Meetings: Enterics Updates'
+author_details: "Alana Little, NEPHU (alana.little@austin.org.au)"
+version_details: "v2.0, 21/09/2025"
+output: 
+  html_document: 
+    code_folding: none
+knit: (function(input, ...) {
+  rmarkdown::render(input, output_file = paste0("Enterics Updates ", Sys.Date()), output_dir = "../Output") })
+---
+
+```{css, echo = FALSE}
+/* */ 
+.main-container {
+    max-width: 1000px;
+}
+
+h1.title {
+  font-weight: bold;
+  font-size: 20px;
+  color: #191d43;
+}
+
+h1 {
+  font-weight: bold;
+  font-size: 20px;
+  color: #5bc788;
+}
+
+h2 {
+  font-weight: bold;
+  font-size: 18px;
+  color: #5bc788;
+}
+
+h3 {
+  font-weight: bold;
+  font-size: 16px;
+  color: #5bc788;
+}
+
+body {
+  font-size: 14px;
+}
+
+.infobox {
+  padding: 10px;
+  background: white;
+  color: black;
+  border: 2px solid #5BC788;
+  border-radius: 10px;
+}
+```
+
+
+```{r, echo = FALSE, message = FALSE}
+#
+knitr::opts_chunk$set(echo    = FALSE, 
+                      warning = FALSE, 
+                      message = FALSE)
+
+options(knitr.kable.NA = '--')
+```
+
+
+```{r}
+#
+if (!require("pacman")) install.packages("pacman")
+
+pacman::p_load(tidyverse,
+               lubridate,
+               readxl,
+               knitr,
+               kableExtra,
+               odbc,
+               DBI,
+               glue)
+```
+
+
+```{r}
+# Epiweek for reporting
+epiweek_start <- lubridate::ymd("2026-03-08")
+epiweek_end   <- lubridate::ymd("2026-03-14")
+
+outbreak_start <- lubridate::ymd("2026-03-12")
+outbreak_end   <- lubridate::ymd("2026-03-18")
+```
+
+
+```{r}
+# Connect to PHAR and run queries
+# Set useProxy = 0 when WFH and useProxy = 1 when in Austin office
+con <- DBI::dbConnect(odbc::odbc(), "PHAR", useProxy = 0)
+
+# New notifications during past epi week
+all_enteric <- DBI::dbGetQuery(con,
+                               glue::glue("SELECT * FROM dh_public_health.phess_release.caseevents_nrt
+                                           WHERE (CONDITION_TYPE = 'Enteric Diseases' OR CONDITION = 'Rotavirus infection') 
+                                           AND EVENT_CLASSIFICATION IN ('Confirmed', 'Probable')
+                                           AND LPHU = 'NEPHU'
+                                           AND EVENT_DATE >= DATE '{epiweek_start}'
+                                           AND EVENT_DATE <= DATE '{epiweek_end}'"))
+
+new_enteric <- all_enteric %>% 
+  janitor::clean_names() %>% 
+  #
+  dplyr::filter(epi_ticked_for_follow_up_unit_last == "Local Public Health Unit") %>% 
+  #
+  dplyr::mutate(type = "New")
+
+# Completed cases since last meeting
+completed_enteric <- DBI::dbGetQuery(con,
+                                     glue::glue("SELECT * FROM dh_public_health.phess_release.caseevents_nrt
+                                                WHERE (CONDITION_TYPE = 'Enteric Diseases' OR CONDITION = 'Rotavirus infection') 
+                                                AND EVENT_CLASSIFICATION IN ('Confirmed', 'Probable')
+                                                AND LPHU = 'NEPHU'
+                                                AND INVESTIGATION_COMPLETED_DATE >= DATE '{outbreak_start}'
+                                                AND INVESTIGATION_COMPLETED_DATE <= DATE '{outbreak_end}'"))
+
+completed_enteric <- completed_enteric %>% 
+  janitor::clean_names() %>% 
+  #
+  dplyr::filter(epi_ticked_for_follow_up_unit_last == "Local Public Health Unit") %>% 
+  #
+  dplyr::mutate(type = "Completed")
+
+# Closed outbreaks since last meeting
+outbreaks_enteric <- DBI::dbGetQuery(con,
+                                     glue::glue("SELECT * FROM dh_public_health.phess_release.outbreakevents_nrt
+                                                WHERE CONDITION_TYPE = 'Enteric Diseases' 
+                                                AND INVESTIGATION_STATUS = 'Completed'
+                                                AND ASSIGNED_LPHU = 'North Eastern'"))
+
+outbreaks_enteric <- outbreaks_enteric %>% 
+  janitor::clean_names() %>% 
+  #
+  dplyr::filter(investigation_completed_date >= outbreak_start & investigation_completed_date <= outbreak_end) %>% 
+  #
+  dplyr::select(event_id,
+                outbreak_name,
+                exposure_site,
+                event_date,
+                event_classification,
+                condition,
+                organism_cause,
+                setting_where_exposure_occurred,
+                investigation_completed_date) %>% 
+  #
+  dplyr::arrange(investigation_completed_date, outbreak_name)
+
+# Close the connection to PHAR
+DBI::dbDisconnect(con)
+
+# Read in conditions reference list
+conditions_reference <- readxl::read_xlsx(paste0(here::here(), "/Data/ConditionsReferenceList.xlsx"),
+                                          sheet     = 1,
+                                          guess_max = min(100000, Inf)) %>% 
+  #
+  janitor::clean_names() %>% 
+  #
+  dplyr::select(condition,
+                chart_label)
+```
+
+## Closed Outbreaks Since Last Meeting
+
+**NEPHU enterics outbreaks closed between `r format(outbreak_start, format = "%d/%m/%Y")` and `r format(outbreak_end, format = "%d/%m/%Y")`**
+
+```{r}
+#
+outbreaks_enteric %>% 
+  dplyr::mutate(
+    facility_name = stringr::str_sub(exposure_site, 32),
+    #
+    organism_cause = dplyr::case_when(
+      organism_cause == "Viral (not laboratory confirmed)" ~ "Viral not confirmed",
+      TRUE ~ organism_cause),
+    #
+    investigation_completed_date = format(investigation_completed_date, format = ("%d/%m/%Y"))) %>% 
+  #
+  dplyr::select(event_id,
+                facility_name,
+                setting_where_exposure_occurred,
+                organism_cause,
+                investigation_completed_date) %>% 
+  #
+  dplyr::arrange(investigation_completed_date, setting_where_exposure_occurred, organism_cause) %>% 
+  #
+  knitr::kable(table.attr = "style = \"color: black;\"",
+               align      = "lllll",
+               col.names  = c("PHESS ID",
+                              "Facility name",
+                              "Facility type",
+                              "Organism",
+                              "Closure date")) %>% 
+  #
+  kableExtra::kable_styling(full_width = TRUE,
+                            position   = "center",
+                            html_font  = "Arial",
+                            font_size  = 12) %>% 
+  #
+  kableExtra::row_spec(row       = nrow(outbreaks_enteric),
+                       extra_css = "border-bottom: 2px solid lightgray;")
+```
+
+***
+
+## New and Completed Cases in Past Epiweek
+
+**NEPHU newly signed out and completed enterics cases between `r format(epiweek_start, format = "%d/%m/%Y")` and `r format(epiweek_end, format = "%d/%m/%Y")`**
+
+```{r}
+# Select cases for review
+review_enteric <- new_enteric %>% 
+  dplyr::bind_rows(completed_enteric) %>% 
+  #
+  dplyr::left_join(conditions_reference, by = "condition") %>% 
+  #
+  dplyr::mutate(
+    condition_name = dplyr::case_when(
+      condition == "Food-borne or water-borne illness" ~ "Potential FBWB Illness",
+      TRUE ~ chart_label),
+    #
+    sex = stringr::str_sub(sex, 1, 1),
+    #
+    age_sex = paste0(age_years, sex),
+    #
+    suburb = stringr::str_to_title(city),
+    #
+    lga = stringr::str_sub(lga, end = -4),
+    #
+    notes = "") %>%
+  #
+  dplyr::arrange(condition, event_date) %>%
+  #
+  dplyr::distinct(event_id, .keep_all = TRUE) %>% 
+  #
+  dplyr::select(condition_name,
+                type,
+                event_id,
+                event_classification,
+                age_sex,
+                suburb,
+                lga,
+                notes)
+
+review_enteric %>% 
+  knitr::kable(table.attr = "style = \"color: black;\"",
+               align      = "llllllll",
+               col.names  = c("Condition",
+                              "Type",
+                              "PHESS ID",
+                              "Classification",
+                              "Age/Sex",
+                              "Suburb",
+                              "LGA",
+                              "Notes")) %>% 
+  #
+  kableExtra::kable_styling(full_width = TRUE,
+                            position   = "center",
+                            html_font  = "Arial",
+                            font_size  = 12) %>% 
+  #
+  kableExtra::row_spec(row       = nrow(review_enteric),
+                       extra_css = "border-bottom: 2px solid lightgray;")
+```
+
+<br/>
+
+<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
