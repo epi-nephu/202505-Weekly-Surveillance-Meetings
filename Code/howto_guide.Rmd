@@ -1,0 +1,236 @@
+---
+title: 'NEPHU Enterics Updates - How-To Guide'
+output: 
+  html_document:
+    code_folding: none
+    toc: true
+    toc_depth: 2
+    toc_float: true
+knit: (function(input, ...) {
+  rmarkdown::render(input, output_file = "../NEPHU Enterics Updates How-To Guide") })
+  
+---
+
+```{css, echo = FALSE}
+/* */ 
+.main-container {
+    max-width: 850px;
+}
+
+h1.title {
+  display: none;
+}
+
+h1 {
+  font-weight: bold;
+  font-size: 18px;
+  color: #191D43;
+}
+
+h2 {
+  font-weight: bold;
+  font-size: 16px;
+  color: #5BC788;
+}
+
+body {
+  font-size: 14px;
+}
+
+li > ul {
+  margin-bottom: 10px;
+}
+```
+
+
+```{r, echo = FALSE, message = FALSE}
+#
+knitr::opts_chunk$set(echo    = FALSE, 
+                      warning = FALSE, 
+                      message = FALSE,
+                      #
+                      fig.align  = 'center')
+
+options(knitr.kable.NA = '--')
+
+here::i_am("Code/howto_guide.Rmd")
+```
+
+# NEPHU Weekly Enterics Updates
+
+* Enterics updates at the NEPHU Weekly Surveillance Meeting are provided by:
+  * Outbreaks: Enterics Team
+  * Cases: Epidemiology and Intelligence Team
+
+* The NEPHU Epidemiology and Intelligence Team extracts a list of closed outbreaks and cases for review from PHESS each week (usually on Wednesday) in preparation for this meeting.
+
+* A second check is done on Thursday morning prior to the meeting to pick up any last-minute additions.
+
+* There is a [NEPHU GitHub repo](https://github.com/epi-nephu/202505-Weekly-Surveillance-Meetings) for this report.
+
+***
+
+# A Step-by-Step Guide to Running the Report
+
+## Part 1: Running the Report
+
+Navigate to the Weekly Surveillance Meetings folder on the shared drive:
+
+```{r, out.width = '800px'}
+#
+knitr::include_graphics(here::here("Screenshots", "folder_shareddrive.PNG"))
+```
+
+<br/>
+
+Open the R Project file from Windows Explorer.
+
+```{r, out.width = '800px'}
+#
+knitr::include_graphics(here::here("Screenshots", "folder_rproject.PNG"))
+```
+
+<br/>
+
+Open phar_checks_surveillance_meetings.Rmd
+
+```{r, out.width = '600px'}
+#
+knitr::include_graphics(here::here("Screenshots", "code_openrmd.PNG"))
+```
+
+<br/>
+
+Update the following parameters:
+
+* epiweek_start: start date for the reporting epiweek (Sunday)
+* epiweek_end: end date for the reporting epiweek (Saturday)
+* outbreak_start: date of the last NEPHU Weekly Surveillance Meeting (Thursday)
+* outbreak_end: day before the NEPHU Surveillance Meeting you are preparing for (Wednesday)
+
+Note that epiweeks start on Sunday and end on Saturday, and that the reporting week for closed outbreaks starts on Thursday and ends on Wednesday.
+
+```{r, out.width = '600px'}
+#
+knitr::include_graphics(here::here("Screenshots", "code_updatedate.PNG"))
+```
+
+<br/>
+
+The only other update you should need to make relates to the Austin proxy server. If you are in the office you want useProxy = 1 and if you are working from home you want useProxy = 0.
+
+```{r, out.width = '600px'}
+#
+knitr::include_graphics(here::here("Screenshots", "code_useproxy.PNG"))
+```
+
+<br/>
+
+Knit the document. Depending on your R installation you may need to select 'html' in a dropdown menu that appears when you click on the Knit button. The code should take less than 30 seconds to run.
+
+```{r, out.width = '600px'}
+#
+knitr::include_graphics(here::here("Screenshots", "code_knit.PNG"))
+```
+
+<br/>
+
+If everything has worked as intended you should now have a html file in the Output folder titled: *Enterics Updates YYYY-MM-DD* (YYYY-MM-DD is the current calendar date).
+
+```{r, out.width = '800px'}
+#
+knitr::include_graphics(here::here("Screenshots", "folder_reports.PNG"))
+```
+
+<br/>
+
+## Part 2: Enterics Outbreaks
+
+Look through each of the sections of the report. Does everything look as expected (e.g. no jankiness the tables or text)? 
+
+Each Wednesday we provide a list of closed outbreaks to the Enterics Team. Check who is presenting the enterics outbreaks this week (usually Renae) in the [Surveillance Meeting Schedule](https://austinhealth.sharepoint.com/:x:/s/NEPHUISDI-BranchWorkspace/IQDPS9ye5hAYSbkrfDaEVwjaASVVU3eEq4z6UIJ-qhHN-2E?e=aHzMXc) and send this information to them via direct Teams message.
+
+```{r, out.width = '800px'}
+#
+knitr::include_graphics(here::here("Screenshots", "teams_outbreaks.PNG"))
+```
+
+<br/>
+
+You can highlight the table in the html and directly paste it into a Teams message - the table formatting should be preserved.
+
+```{r, out.width = '800px'}
+#
+knitr::include_graphics(here::here("Screenshots", "table_outbreak.PNG"))
+```
+
+<br/>
+
+Note that we also double check before the NEPHU Surveillance Meeting on Thursday morning (by rerunning the .Rmd) that there have been no last-minute additions to the list.
+
+```{r, out.width = '800px'}
+#
+knitr::include_graphics(here::here("Screenshots", "teams_update.PNG"))
+```
+
+<br/>
+
+## Part 3: Enterics Cases
+
+Each Wednesday we review the newly signed out and completed cases to identify any updates we want to provide at the NEPHU Surveillance Meeting.
+
+Not all cases will need an verbal update:
+
+* Potential FBWB illness: check whether they are linked to a known aged care/child care outbreak, no verbal update needed if this is the case
+* Rotavirus: most cases are signed out for an AIR check only, no verbal update required
+* Cases that have been discussed at previous meetings: verbal update only needed if there have been significant updates during case follow-up
+* Cases where follow-up is still in progress/not yet started: no need for a verbal update at this stage, as these will be picked up again when follow-up has been completed (and we will have something more interesting to say)
+
+I copy the table from the html into a OneNote notebook. Similar to the outbreaks table, you can highlight the table in the html and paste it into OneNote.
+
+```{r, out.width = '800px'}
+#
+knitr::include_graphics(here::here("Screenshots", "table_cases.PNG"))
+```
+
+<br/>
+
+For each case, look them up in PHESS and add any relevant notes into the Notes column. Most of this information can be found in the PHESS Notes summary that the PHOs add when the interview has been completed. Information about the exact pathogen and sample sites can be found in the Lab Results tab.
+
+* What was the specific pathogen (e.g. *Salmonella* Typhimurium, *Salmonella* Enteritidis)?
+* I flag if they have a positive culture from a site other than faeces, as this is often a sign of more severe illness (e.g. typhoid in blood culture)
+* Are they coinfected with another pathogen?
+* Are they linked to any ongoing outbreak or cluster?
+* Have they been hospitalised?
+* Any recent interstate or overseas travel?
+* Any unwell contacts?
+* Any high risk contacts?
+* Any high risk settings?
+* Any identified risk factors?
+* Any other public health actions?
+
+I change the colour to blue for the cases I plan to discuss so that they stand out!
+
+Note that we also double check before the NEPHU Surveillance Meeting on Thursday morning (by rerunning the .Rmd) that there have been no last-minute additions to the list.
+
+```{r, out.width = '800px'}
+#
+knitr::include_graphics(here::here("Screenshots", "onenote_cases.PNG"))
+```
+
+***
+
+## Troubleshooting
+
+Everything should run smoothly, but if the report fails to run I highly recommend running the code line-by-line. It's also very good practice to run a new report line-by-line the first few times you run it. This allows you to become familiar with the code and what it does.
+
+What does line-by-line mean? Starting from the first R chunk, run each line of code in order. You don't need to run the YAML header or the first css code chunk line-by-line. If you try to you will get some esoteric error messages! You also do not need to run the narrative text sections either, just the code in the R code chunks.
+
+```{r, out.width = '800px'}
+#
+knitr::include_graphics(here::here("Screenshots", "code_starthere.PNG"))
+```
+
+<br/>
+
+<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
