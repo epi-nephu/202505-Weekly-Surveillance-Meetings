@@ -60,6 +60,8 @@ knitr::opts_chunk$set(echo    = FALSE,
                       message = FALSE)
 
 options(knitr.kable.NA = '--')
+
+here::i_am("Code/phar_checks_surveillance_meeting.Rmd")
 ```
 
 
@@ -83,6 +85,7 @@ pacman::p_load(tidyverse,
 epiweek_start <- lubridate::ymd("2026-03-08")
 epiweek_end   <- lubridate::ymd("2026-03-14")
 
+# Date range for closed outbreaks
 outbreak_start <- lubridate::ymd("2026-03-12")
 outbreak_end   <- lubridate::ymd("2026-03-18")
 ```
