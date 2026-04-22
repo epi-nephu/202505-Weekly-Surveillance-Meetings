@@ -94,7 +94,10 @@ outbreak_end   <- lubridate::ymd("2026-04-22")
 ```{r}
 # Connect to PHAR and run queries
 # Set useProxy = 0 when WFH and useProxy = 1 when in Austin office
-con <- DBI::dbConnect(odbc::odbc(), "PHAR", useProxy = 1)
+proxy_status <- dplyr::case_when(Sys.getenv("http_proxy") == "http://server340v.armc.org.au:8080" ~ 1,
+                                 TRUE ~ 0)
+
+con <- DBI::dbConnect(odbc::odbc(), "PHAR", useProxy = proxy_status)
 
 # New notifications during past epi week
 all_enteric <- DBI::dbGetQuery(con,
