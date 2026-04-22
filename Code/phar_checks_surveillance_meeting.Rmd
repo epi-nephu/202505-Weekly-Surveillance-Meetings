@@ -82,12 +82,12 @@ pacman::p_load(tidyverse,
 
 ```{r}
 # Epiweek for reporting
-epiweek_start <- lubridate::ymd("2026-04-05")
-epiweek_end   <- lubridate::ymd("2026-04-11")
+epiweek_start <- lubridate::ymd("2026-04-12")
+epiweek_end   <- lubridate::ymd("2026-04-18")
 
 # Date range for closed outbreaks
-outbreak_start <- lubridate::ymd("2026-04-09")
-outbreak_end   <- lubridate::ymd("2026-04-15")
+outbreak_start <- lubridate::ymd("2026-04-16")
+outbreak_end   <- lubridate::ymd("2026-04-22")
 ```
 
 
@@ -198,7 +198,7 @@ outbreaks_enteric <- outbreaks_enteric %>%
 
 ```{r}
 #
-outbreaks_enteric %>% 
+table_outbreaks <- outbreaks_enteric %>% 
   knitr::kable(table.attr = "style = \"color: black;\"",
                align      = "lllll",
                col.names  = c("PHESS ID",
@@ -215,6 +215,10 @@ outbreaks_enteric %>%
   kableExtra::row_spec(row       = nrow(outbreaks_enteric),
                        extra_css = "border-bottom: 2px solid lightgray;")
 ```
+
+`r if(nrow(outbreaks_enteric) > 0) table_outbreaks`
+
+`r if(nrow(outbreaks_enteric) == 0) paste0("No outbreaks to display.")`
 
 ***
 
