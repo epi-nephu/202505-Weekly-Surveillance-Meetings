@@ -1,7 +1,6 @@
 ---
 title: 'NEPHU Surveillance Meetings: Enterics Updates'
 author_details: "Alana Little, NEPHU (alana.little@austin.org.au)"
-version_details: "v2.0, 21/09/2025"
 output: 
   html_document: 
     code_folding: none
@@ -82,12 +81,12 @@ pacman::p_load(tidyverse,
 
 ```{r}
 # Epiweek for reporting
-epiweek_start <- lubridate::ymd("2026-04-12")
-epiweek_end   <- lubridate::ymd("2026-04-18")
+epiweek_start <- lubridate::ymd("2026-10-11")
+epiweek_end   <- lubridate::ymd("2026-10-17")
 
 # Date range for closed outbreaks
-outbreak_start <- lubridate::ymd("2026-04-16")
-outbreak_end   <- lubridate::ymd("2026-04-22")
+outbreak_start <- lubridate::ymd("2026-10-15")
+outbreak_end   <- lubridate::ymd("2026-10-22")
 ```
 
 
@@ -102,7 +101,7 @@ con <- DBI::dbConnect(odbc::odbc(), "PHAR", useProxy = proxy_status)
 # New notifications during past epi week
 all_enteric <- DBI::dbGetQuery(con,
                                glue::glue("SELECT * FROM dh_public_health.phess_release.caseevents_nrt
-                                           WHERE (CONDITION_TYPE = 'Enteric Diseases' OR CONDITION = 'Rotavirus infection') 
+                                           WHERE (CONDITION_TYPE = 'Enteric Diseases' AND CONDITION != 'Cryptosporidiosis') 
                                            AND EVENT_CLASSIFICATION IN ('Confirmed', 'Probable')
                                            AND LPHU = 'NEPHU'
                                            AND EVENT_DATE >= DATE '{epiweek_start}'
@@ -118,7 +117,7 @@ new_enteric <- all_enteric %>%
 # Completed cases since last meeting
 completed_enteric <- DBI::dbGetQuery(con,
                                      glue::glue("SELECT * FROM dh_public_health.phess_release.caseevents_nrt
-                                                WHERE (CONDITION_TYPE = 'Enteric Diseases' OR CONDITION = 'Rotavirus infection') 
+                                                WHERE (CONDITION_TYPE = 'Enteric Diseases' AND CONDITION != 'Cryptosporidiosis') 
                                                 AND EVENT_CLASSIFICATION IN ('Confirmed', 'Probable')
                                                 AND LPHU = 'NEPHU'
                                                 AND INVESTIGATION_COMPLETED_DATE >= DATE '{outbreak_start}'
